@@ -283,12 +283,17 @@ class OptImgProc {
       double y1 = lines[i]->y1;
       // cout << x0 << " " << y0 << endl;
       // cout << x1 << " " << y1 << endl;
-      result.draw_line(x0, y0, x1, y1, red, 1.0f, 0xF0F0F0F0);
-          // .draw_line(x0, y0, x1, y1, black, 1.0f, 0x0F0F0F0F)
-          // .draw_line(x0 + 1, y0, x1 + 1, y1, white, 1.0f, 0xF0F0F0F0)
-          // .draw_line(x0 + 1, y0, x1 + 1, y1, black, 1.0f, 0x0F0F0F0F)
-          // .draw_line(x0, y0 + 1, x1, y1 + 1, white, 1.0f, 0xF0F0F0F0)
-          // .draw_line(x0, y0 + 1, x1, y1 + 1, black, 1.0f, 0x0F0F0F0F);
+      result.draw_line(x0, y0, x1, y1, white, 1.0f, 0xF0F0F0F0)
+          .draw_line(x0, y0, x1, y1, black, 1.0f, 0x0F0F0F0F);
+
+      // Widen the line
+      int width = 7;
+      for (int i = 1; i <= width; ++i) {
+        result.draw_line(x0 + i, y0, x1 + i, y1, white, 1.0f, 0xF0F0F0F0)
+          .draw_line(x0 + i, y0, x1 + i, y1, black, 1.0f, 0x0F0F0F0F)
+          .draw_line(x0, y0 + i, x1, y1 + i, white, 1.0f, 0xF0F0F0F0)
+          .draw_line(x0, y0 + i, x1, y1 + i, black, 1.0f, 0x0F0F0F0F);
+      }
     }
 
     int rad = (src.height() + src.width()) / 200;
