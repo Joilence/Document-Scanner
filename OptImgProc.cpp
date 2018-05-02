@@ -60,7 +60,6 @@ class OptImgProc {
   CImg<double> edged;
   CImg<double> hough;
   CImg<double> result;
-  CImg<double> cimg_edged;
 
   std::vector<Point*> peaks;
   std::vector<Line*> lines;
@@ -68,32 +67,8 @@ class OptImgProc {
 
   OptImgProc(string path) {
     src = CImg<double>(path.c_str());
-    src.resize(600, 800);
     edged = CImg<double>(src.width(), src.height(), 1, 1, 0);
-    int maxDistance = distance(src.width(), src.height());
-    hough = CImg<double>(360, maxDistance, 1, 1, 0);
     result = CImg<double>(src);
-  }
-
-  void findPeaks() {
-    cimg_forXY(hough, x, y) {
-      if (peaks.size() > MAX_PEAK) break;
-      double votes = hough(x, y);
-      if (votes > THRESHOLD) {
-        bool hasNeighbor = false;
-        for (int i = 0; i < peaks.size(); ++i) {
-          double dis = distance(peaks[i]->x - x, peaks[i]->y - y);
-          if (dis < MAX_DIS) {
-            hasNeighbor = true;
-            if (peaks[i]->value < votes) peaks[i] = new Point(x, y, votes);
-            break;
-          }
-        }
-        if (!hasNeighbor) peaks.push_back(new Point(x, y, votes));
-      }
-    }
-    std::sort(peaks.begin(), peaks.end(), comp);
-    print_peaks();
   }
 
   CImg<double> computeEdged() {
@@ -172,6 +147,40 @@ class OptImgProc {
     hough = CImg<double>(vote2).normalize(0, 1000);
     // hough.display();
     return hough;
+  }
+
+    void findPeaks() {
+    cimg_forXY(hough, x, y) {
+      double votes = hough(x, y);
+      if (votes > THRESHOLD) {
+        bool hasNeighbor = false;
+        for (int i = 0; i < peaks.size(); ++i) {
+          double dis = distance(peaks[i]->x - x, peaks[i]->y - y);
+          if (dis < MAX_DIS) {
+            hasNeighbor = true;
+            if (peaks[i]->value < votes) peaks[i] = new Point(x, y, votes);
+            break;
+          }
+        }
+
+        // if has neighbor, then the point was either picked or passed
+        // if not, continue
+        if (!hasNeighbor) {
+          // if peaks are not full, push back directly
+          if (peaks.size() < MAX_PEAK) { //
+            peaks.push_back(new Point(x, y, votes));
+          // if peaks is full, compare with the last peak
+          } else if (peaks.back()->value < votes) {
+            peaks.back()->value = votes;
+            peaks.back()->x = x;
+            peaks.back()->y = y;
+          }
+        }
+        std::sort(peaks.begin(), peaks.end(), comp);
+      }
+    }
+    std::sort(peaks.begin(), peaks.end(), comp);
+    print_peaks();
   }
 
   bool isInImage(double cx, double cy) {
