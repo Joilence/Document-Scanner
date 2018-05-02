@@ -5,11 +5,11 @@
 #include <vector>
 
 #define GRADLIMIT 20
-#define THRESHOLD 550
-#define MAX_DIS 20
-#define OVERLAP_DIS 20
+#define THRESHOLD 550         // baseline of peaks value
+#define NEIGHBOR_PEAK_DIS 20  // decide whether two peaks are neighbor
+#define NEIGHBOR_LINE_DIS 20  // decide whether two lines are neighbor
 #define MAX_PEAK 8
-#define MIN_DOUBLE 0.0000001
+#define MIN_DOUBLE 0.0000001  // make every denominator be non-zero
 
 using std::cout;
 using std::endl;
@@ -156,7 +156,7 @@ class OptImgProc {
         bool hasNeighbor = false;
         for (int i = 0; i < peaks.size(); ++i) {
           double dis = distance(peaks[i]->x - x, peaks[i]->y - y);
-          if (dis < MAX_DIS) {
+          if (dis < NEIGHBOR_PEAK_DIS) {
             hasNeighbor = true;
             if (peaks[i]->value < votes) peaks[i] = new Point(x, y, votes);
             break;
@@ -188,6 +188,7 @@ class OptImgProc {
   }
 
   bool isNeighbor(double k, double b, double ki, double bi) {
+    // u = up, d = down, r = right, l = left
     double cu = ((double)(0 - b) / k), 
            cd = ((double)(src.height() - b) / k),
            cr = ((double)(k * src.width() + b)),
@@ -197,10 +198,10 @@ class OptImgProc {
            cri = ((double)(ki * src.width() + bi)), 
            cli = bi;
 
-    if (isInImage(cu, cui) && abs(cui - cu) < OVERLAP_DIS) return true;
-    if (isInImage(cd, cdi) && abs(cdi - cd) < OVERLAP_DIS) return true;
-    if (isInImage(cr, cri) && abs(cri - cr) < OVERLAP_DIS) return true;
-    if (isInImage(cl, cli) && abs(cli - cl) < OVERLAP_DIS) return true;
+    if (isInImage(cu, cui) && abs(cui - cu) < NEIGHBOR_LINE_DIS) return true;
+    if (isInImage(cd, cdi) && abs(cdi - cd) < NEIGHBOR_LINE_DIS) return true;
+    if (isInImage(cr, cri) && abs(cri - cr) < NEIGHBOR_LINE_DIS) return true;
+    if (isInImage(cl, cli) && abs(cli - cl) < NEIGHBOR_LINE_DIS) return true;
     return false;
   }
 
@@ -209,6 +210,8 @@ class OptImgProc {
                                         src.height() * src.height())) /
                               2,
            thetamax = 2 * cimg::PI;
+
+    // for every peak, compute a line
     for (int i = 0; i < peaks.size(); ++i) {
       double rho = peaks[i]->y * rhomax / hough.height(),
              theta = peaks[i]->x * thetamax / hough.width(),
@@ -299,6 +302,25 @@ class OptImgProc {
     int rad = (src.height() + src.width()) / 200;
     for (int i = 0; i < intersections.size(); ++i) {
       result.draw_circle(intersections[i]->x, intersections[i]->y, rad, red);
+
+      // for (int j = i; j < intersections.size(); ++j) {
+      //   double x0 = intersections[i]->x;
+      //   double y0 = intersections[i]->y;
+      //   double x1 = intersections[j]->x;
+      //   double y1 = intersections[j]->y;
+
+      //   result.draw_line(x0, y0, x1, y1, white, 1.0f, 0xF0F0F0F0)
+      //       .draw_line(x0, y0, x1, y1, black, 1.0f, 0x0F0F0F0F);
+
+      //   // Widen the line
+      //   int width = 7;
+      //   for (int i = 1; i <= width; ++i) {
+      //     result.draw_line(x0 + i, y0, x1 + i, y1, white, 1.0f, 0xF0F0F0F0)
+      //         .draw_line(x0 + i, y0, x1 + i, y1, black, 1.0f, 0x0F0F0F0F)
+      //         .draw_line(x0, y0 + i, x1, y1 + i, white, 1.0f, 0xF0F0F0F0)
+      //         .draw_line(x0, y0 + i, x1, y1 + i, black, 1.0f, 0x0F0F0F0F);
+      //   }
+      // }
     }
 
     // result.display();

@@ -27,13 +27,9 @@ int main(int argc, char const *argv[]) {
   // for (int i = 0; i < TESTSNUM; ++i) {  
   for (int i = 0; i < test_img.size(); i++) {
     imgs.push_back(OptImgProc("Dataset/" + std::to_string(test_img[i]) + ".jpg"));
-    // imgs[i].grayScale();
-    // imgs[i].blurize(3);  
     // imgs[i].computeEdged();
     imgs[i].computeHough();
-    // imgs[i].cimgComputeHough();
     imgs[i].computeResult();
-    // imgs[i].computeResult();
 
     string save_path;
     // save_path = "result/" + std::to_string(test_img[i]) + "-edge.jpg";
