@@ -29,7 +29,7 @@ int main(int argc, char const *argv[]) {
     imgs.push_back(OptImgProc("Dataset/" + std::to_string(test_img[i]) + ".jpg"));
     // imgs[i].computeEdged();
     imgs[i].computeHough();
-    imgs[i].computeResult();
+    imgs[i].computeResult(true);
 
     string save_path;
     // save_path = "result/" + std::to_string(test_img[i]) + "-edge.jpg";
