@@ -16,7 +16,18 @@ int main() {
   corners_trans[1] = Point(771, 0);
   corners_trans[2] = Point(0, img_height - 1);
   corners_trans[3] = Point(650, img_height - 1);
+  
   MatrixXd transform = getPerspectiveTransform(corners, corners_trans);
-  cout << transform;
+  cout << "transform = \n";
+  cout << transform << endl;
+
+  vector<Point> points, points_trans;
+  for (int i = 0; i < img_width; ++i) {
+    for (int j = 0; j < img_height; ++i) {
+      points.push_back(Point(i, j));
+    }
+  }
+  // perspectiveTransform(points, points_trans, transform);
+
   return 0;
 }
