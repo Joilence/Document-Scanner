@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "datatype.cpp"
 
 #define GRADLIMIT 20
 #define THRESHOLD 550         // baseline of peaks value
@@ -22,30 +23,7 @@ using cimg::PI;
 /**
  * Color
  */
-const unsigned char white[3] = {255, 255, 255}, black[3] = {0, 0, 0}, red[] = {220, 20, 60};;
-
-/**
- * @brief 2D Point
- * @details Stores coordinates and its votes
- */
-struct Point {
-  double x, y, value;
-  Point(double _x, double _y, double _value) : x(_x), y(_y), value(_value) {}
-};
-bool comp(Point* a, Point* b) { return (*a).value > (*b).value; }
-
-/**
- * @brief 2D Line
- * @details Stores k and b, and two points of it to reduce time complexity
- */
-struct Line {
-  double k, b;
-  double x0, y0, x1, y1;
-  vector<Point> intersections;
-  vector<Point> borderPoints;
-  Line(double _k, double _b, int _x0, int _y0, int _x1, int _y1)
-      : k(_k), b(_b), x0(_x0), y0(_y0), x1(_x1), y1(_y1) {}
-};
+const unsigned char white[3] = {255, 255, 255}, black[3] = {0, 0, 0}, red[] = {220, 20, 60};
 
 /**
  * @brief Calculate Euclidean distance
@@ -62,6 +40,7 @@ class OptImgProc {
   CImg<double> edged;
   CImg<double> hough;
   CImg<double> result;
+  CImg<double> A4;
 
   std::vector<Point*> peaks;
   std::vector<Line*> lines;

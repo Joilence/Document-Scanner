@@ -16,11 +16,11 @@ using namespace cimg_library;
 
 int main(int argc, char const *argv[]) {
   vector<int> test_img;
-  // test_img.push_back(0);
+  test_img.push_back(0);
   // test_img.push_back(1);
   // test_img.push_back(2);
   // test_img.push_back(3);
-  test_img.push_back(4);
+  // test_img.push_back(4);
   // test_img.push_back(5);
 
   vector<OptImgProc> imgs;
@@ -29,7 +29,7 @@ int main(int argc, char const *argv[]) {
     imgs.push_back(OptImgProc("Dataset/" + std::to_string(test_img[i]) + ".jpg"));
     // imgs[i].computeEdged();
     imgs[i].computeHough();
-    imgs[i].computeResult(true);
+    imgs[i].computeResult();
 
     string save_path;
     // save_path = "result/" + std::to_string(test_img[i]) + "-edge.jpg";
