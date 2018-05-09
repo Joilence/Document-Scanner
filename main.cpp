@@ -12,15 +12,13 @@ using std::string;
 using std::vector;
 using namespace cimg_library;
 
-// #define TESTSNUM 6
-
 int main(int argc, char const *argv[]) {
   vector<int> test_img;
-  test_img.push_back(0);
-  test_img.push_back(1);
-  test_img.push_back(2);
-  test_img.push_back(3);
-  // test_img.push_back(4);
+  // test_img.push_back(0);
+  // test_img.push_back(1);
+  // test_img.push_back(2);
+  // test_img.push_back(3);
+  test_img.push_back(4);
   // test_img.push_back(5);
   // test_img.push_back(6);
 
@@ -39,11 +37,11 @@ int main(int argc, char const *argv[]) {
     imgs[i].hough.normalize(0,255).save(save_path.c_str());
     save_path = "result/" + std::to_string(test_img[i]) + "-res.jpg";
     imgs[i].result.save(save_path.c_str());
-    imgs[i].sort_intersections();
-    imgs[i].computeTransMatrix();
-    imgs[i].drawA4();
-    save_path = "result/" + std::to_string(test_img[i]) + "-a4.jpg";
-    imgs[i].A4.save(save_path.c_str());
+    // imgs[i].sort_intersections();
+    // imgs[i].computeTransMatrix();
+    // imgs[i].drawA4();
+    // save_path = "result/" + std::to_string(test_img[i]) + "-a4.jpg";
+    // imgs[i].A4.save(save_path.c_str());
   }
 
   return 0;

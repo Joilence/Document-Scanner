@@ -8,7 +8,7 @@
 #define GRADLIMIT 20
 #define THRESHOLD 550         // baseline of peaks value
 #define NEIGHBOR_PEAK_DIS 20  // decide whether two peaks are neighbor
-#define NEIGHBOR_LINE_DIS 20  // decide whether two lines are neighbor
+#define NEIGHBOR_LINE_DIS 0.3  // decide whether two lines are neighbor
 #define MAX_PEAK 8
 #define MIN_DOUBLE 0.0000001  // make every denominator be non-zero
 
@@ -183,16 +183,16 @@ class OptImgProc {
            cli = bi;
 
     if (isInImage(cu, 0) && isInImage(cui, 0) &&
-        abs(cui - cu) < NEIGHBOR_LINE_DIS)
+        abs(cui - cu) < NEIGHBOR_LINE_DIS * src.width())
       return true;
     if (isInImage(cd, src.height()) && isInImage(cdi, src.height()) &&
-        abs(cdi - cd) < NEIGHBOR_LINE_DIS)
+        abs(cdi - cd) < NEIGHBOR_LINE_DIS * src.width())
       return true;
     if (isInImage(src.width(), cr) && isInImage(src.width(), cri) &&
-        abs(cri - cr) < NEIGHBOR_LINE_DIS)
+        abs(cri - cr) < NEIGHBOR_LINE_DIS * src.height())
       return true;
     if (isInImage(0, cl) && isInImage(0, cli) &&
-        abs(cli - cl) < NEIGHBOR_LINE_DIS)
+        abs(cli - cl) < NEIGHBOR_LINE_DIS * src.height())
       return true;
     return false;
   }
@@ -354,12 +354,6 @@ class OptImgProc {
       string line_info = line_equation(k, b);
       result.draw_text(mx, my, line_info.c_str(), white, black, 1, font_height);
     }
-  }
-
-  void allProcess() {
-    // computeEdged();
-    computeHough();
-    computeResult();
   }
 
   void print_points(vector<Point> & points) {
