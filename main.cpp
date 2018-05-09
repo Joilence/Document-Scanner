@@ -40,6 +40,10 @@ int main(int argc, char const *argv[]) {
     save_path = "result/" + std::to_string(test_img[i]) + "-res.jpg";
     imgs[i].result.save(save_path.c_str());
     imgs[i].sort_intersections();
+    imgs[i].computeTransMatrix();
+    imgs[i].drawA4();
+    save_path = "result/" + std::to_string(test_img[i]) + "-a4.jpg";
+    imgs[i].A4.save(save_path.c_str());
   }
 
   return 0;

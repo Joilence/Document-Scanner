@@ -40,6 +40,7 @@ class OptImgProc {
   CImg<double> edged;
   CImg<double> hough;
   CImg<double> result;
+  CImg<double> transMatrix;
   CImg<double> A4;
 
   std::vector<Point> peaks;
@@ -103,8 +104,8 @@ class OptImgProc {
                  thetamax = 2 * cimg::PI;
 
     CImgList<> grad = img.get_gradient();
-    grad[0].display();
-    grad[1].display();
+    // grad[0].display();
+    // grad[1].display();
     cimglist_for(grad, l) grad[l].blur(1.5);
     CImg<double> vote(500, 400, 1, 1, 0);
     vote.fill(0);
@@ -128,7 +129,7 @@ class OptImgProc {
     CImg<> vote2(vote);
     cimg_forXY(vote2, x, y) vote2(x, y) = (float)std::log(1 + vote(x, y));
     hough = CImg<double>(vote2).normalize(0, 1000);
-    hough.display();
+    // hough.display();
     return hough;
   }
 
@@ -391,4 +392,145 @@ class OptImgProc {
     cout << "---\nsorted intersections:\n";
     print_points(intersections);
   }
+
+  void computeTransMatrix() {
+    CImg<double> A(8, 8);
+    CImg<double> B(1, 8);
+
+    // std::swap(intersections[2], intersections[3]);
+    cout << "---\nswap intersections 1, 2\n";
+    print_points(intersections);
+
+    double x, y;
+    x = intersections[0].x - intersections[1].x;
+    y = intersections[0].y - intersections[1].y;
+    int widthA4 = (int)sqrt(x * x + y * y);
+    x = intersections[1].x - intersections[2].x;
+    y = intersections[1].y - intersections[2].y;
+    int heightA4 = (int)sqrt(x * x + y * y);
+
+    vector<Point> dest_point;
+    dest_point.push_back(Point(0, 0)); // top right
+    dest_point.push_back(Point(widthA4, 0)); // top left
+    dest_point.push_back(Point(0, heightA4)); // bottom right
+    dest_point.push_back(Point(widthA4, heightA4)); // bottom left
+
+
+    for (int i = 0; i < 4; i++) {
+        int j = i * 2;
+        A(0, j) = dest_point[i].x;
+        A(1, j) = dest_point[i].y;
+        A(2, j) = 1;
+        A(3, j) = 0;
+        A(4, j) = 0;
+        A(5, j) = 0;
+        A(6, j) = -intersections[i].x * dest_point[i].x;
+        A(7, j) = -intersections[i].x * dest_point[i].y;
+
+        int k = j + 1;
+        A(0, k) = 0;
+        A(1, k) = 0;
+        A(2, k) = 0;
+        A(3, k) = dest_point[i].x;
+        A(4, k) = dest_point[i].y;
+        A(5, k) = 1;
+        A(6, k) = -intersections[i].y * dest_point[i].x;
+        A(7, k) = -intersections[i].y * dest_point[i].y;
+
+        B(0, j) = intersections[i].x;
+        B(0, j + 1) = intersections[i].y;
+    }
+
+    transMatrix = B.get_solve(A);
+
+    cout << "A矩阵\n";
+    for (int i = 0; i < A._height; i++) {
+        for (int j = 0; j < A._width; j++) {
+            cout << A(j, i) << " ";
+        }
+        cout << endl;
+    }
+    cout << "B矩阵\n";
+    for (int i = 0; i < B._height; i++) {
+        for (int j = 0; j < B._width; j++) {
+            cout << B(j, i) << " ";
+        }
+        cout << endl;
+    }
+    cout << "转换矩阵\n";
+    for (int i = 0; i < transMatrix._height; i++) {
+        for (int j = 0; j < transMatrix._width; j++) {
+            cout << transMatrix(j, i) << " ";
+        }
+        cout << endl;
+    }
+  }
+
+  void drawA4() {
+    double x, y;
+    x = intersections[0].x - intersections[1].x;
+    y = intersections[0].y - intersections[1].y;
+    int widthA4 = (int)sqrt(x * x + y * y);
+    x = intersections[1].x - intersections[2].x;
+    y = intersections[1].y - intersections[2].y;
+    int heightA4 = (int)sqrt(x * x + y * y);
+    widthA4 = 319;
+    heightA4 = 450;
+    cout << "---\n widthA4, heightA4 = " << std::to_string(widthA4) << ", "
+         << std::to_string(heightA4) << "\n---\n";
+    A4.assign(widthA4, heightA4, 1, 3);
+
+    float a = transMatrix(0, 0), b = transMatrix(0, 1), c = transMatrix(0, 2),
+          d = transMatrix(0, 3), e = transMatrix(0, 4), f = transMatrix(0, 5),
+          g = transMatrix(0, 6), h = transMatrix(0, 7);
+    for (int u = 0; u < widthA4; u++) {
+      for (int v = 0; v < heightA4; v++) {
+        double x = 0, y = 0;
+        x = (a * u + b * v + c) / (g * u + h * v + 1);
+        y = (d * u + e * v + f) / (g * u + h * v + 1);
+
+        if (x < 0 || y < 0) {
+          cout << "find < 0\n";
+          cout << "u, v = " << u << ", " << v << endl;
+          cout << "x, y = " << x << ", " << y << endl;
+          cout << "c, f = " << c << ", " << f << endl;
+          exit(0);
+        }
+
+        int x0 = floor(x);
+        int y0 = floor(y);
+        int x1 = x0 + 1;
+        int y1 = y0 + 1;
+        double a0 = x - x0;
+        double b0 = y - y0;
+        A4(u, v, 0) = a0 * b0 * src(x0, y0, 0) +
+                      a0 * (1 - b0) * src(x0, y1, 0) +
+                      (1 - a0) * b0 * src(x1, y0, 0) +
+                      (1 - a0) * (1 - b0) * src(x1, y1, 0);
+        A4(u, v, 1) = a0 * b0 * src(x0, y0, 1) +
+                      a0 * (1 - b0) * src(x0, y1, 1) +
+                      (1 - a0) * b0 * src(x1, y0, 1) +
+                      (1 - a0) * (1 - b0) * src(x1, y1, 1);
+        A4(u, v, 2) = a0 * b0 * src(x0, y0, 2) +
+                      a0 * (1 - b0) * src(x0, y1, 2) +
+                      (1 - a0) * b0 * src(x1, y0, 2) +
+                      (1 - a0) * (1 - b0) * src(x1, y1, 2);
+      }
+    }
+  }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
