@@ -397,10 +397,6 @@ class OptImgProc {
     CImg<double> A(8, 8);
     CImg<double> B(1, 8);
 
-    // std::swap(intersections[2], intersections[3]);
-    cout << "---\nswap intersections 1, 2\n";
-    print_points(intersections);
-
     double x, y;
     x = intersections[0].x - intersections[1].x;
     y = intersections[0].y - intersections[1].y;
@@ -443,21 +439,21 @@ class OptImgProc {
 
     transMatrix = B.get_solve(A);
 
-    cout << "A矩阵\n";
+    cout << "---\nMatrix A = \n";
     for (int i = 0; i < A._height; i++) {
         for (int j = 0; j < A._width; j++) {
             cout << A(j, i) << " ";
         }
         cout << endl;
     }
-    cout << "B矩阵\n";
+    cout << "---\nMatrix B = \n";
     for (int i = 0; i < B._height; i++) {
         for (int j = 0; j < B._width; j++) {
             cout << B(j, i) << " ";
         }
         cout << endl;
     }
-    cout << "转换矩阵\n";
+    cout << "---\nTransMatrix = \n";
     for (int i = 0; i < transMatrix._height; i++) {
         for (int j = 0; j < transMatrix._width; j++) {
             cout << transMatrix(j, i) << " ";
@@ -474,63 +470,29 @@ class OptImgProc {
     x = intersections[1].x - intersections[2].x;
     y = intersections[1].y - intersections[2].y;
     int heightA4 = (int)sqrt(x * x + y * y);
-    widthA4 = 319;
-    heightA4 = 450;
     cout << "---\n widthA4, heightA4 = " << std::to_string(widthA4) << ", "
          << std::to_string(heightA4) << "\n---\n";
     A4.assign(widthA4, heightA4, 1, 3);
 
-    float a = transMatrix(0, 0), b = transMatrix(0, 1), c = transMatrix(0, 2),
+    double a = transMatrix(0, 0), b = transMatrix(0, 1), c = transMatrix(0, 2),
           d = transMatrix(0, 3), e = transMatrix(0, 4), f = transMatrix(0, 5),
           g = transMatrix(0, 6), h = transMatrix(0, 7);
     for (int u = 0; u < widthA4; u++) {
       for (int v = 0; v < heightA4; v++) {
-        double x = 0, y = 0;
-        x = (a * u + b * v + c) / (g * u + h * v + 1);
-        y = (d * u + e * v + f) / (g * u + h * v + 1);
+        int x = floor((a * u + b * v + c) / (g * u + h * v + 1));
+        int y = floor((d * u + e * v + f) / (g * u + h * v + 1));
 
         if (x < 0 || y < 0) {
-          cout << "find < 0\n";
+          cout << "find x or y < 0\n";
           cout << "u, v = " << u << ", " << v << endl;
           cout << "x, y = " << x << ", " << y << endl;
-          cout << "c, f = " << c << ", " << f << endl;
-          exit(0);
+          exit(1);
         }
 
-        int x0 = floor(x);
-        int y0 = floor(y);
-        int x1 = x0 + 1;
-        int y1 = y0 + 1;
-        double a0 = x - x0;
-        double b0 = y - y0;
-        A4(u, v, 0) = a0 * b0 * src(x0, y0, 0) +
-                      a0 * (1 - b0) * src(x0, y1, 0) +
-                      (1 - a0) * b0 * src(x1, y0, 0) +
-                      (1 - a0) * (1 - b0) * src(x1, y1, 0);
-        A4(u, v, 1) = a0 * b0 * src(x0, y0, 1) +
-                      a0 * (1 - b0) * src(x0, y1, 1) +
-                      (1 - a0) * b0 * src(x1, y0, 1) +
-                      (1 - a0) * (1 - b0) * src(x1, y1, 1);
-        A4(u, v, 2) = a0 * b0 * src(x0, y0, 2) +
-                      a0 * (1 - b0) * src(x0, y1, 2) +
-                      (1 - a0) * b0 * src(x1, y0, 2) +
-                      (1 - a0) * (1 - b0) * src(x1, y1, 2);
+        A4(u, v, 0) = src(x, y, 0);
+        A4(u, v, 1) = src(x, y, 1);
+        A4(u, v, 2) = src(x, y, 2);
       }
     }
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

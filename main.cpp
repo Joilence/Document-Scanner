@@ -16,13 +16,13 @@ using namespace cimg_library;
 
 int main(int argc, char const *argv[]) {
   vector<int> test_img;
-  // test_img.push_back(0);
-  // test_img.push_back(1);
-  // test_img.push_back(2);
-  // test_img.push_back(3);
+  test_img.push_back(0);
+  test_img.push_back(1);
+  test_img.push_back(2);
+  test_img.push_back(3);
   // test_img.push_back(4);
   // test_img.push_back(5);
-  test_img.push_back(6);
+  // test_img.push_back(6);
 
   vector<OptImgProc> imgs;
   // for (int i = 0; i < TESTSNUM; ++i) {  
