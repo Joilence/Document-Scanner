@@ -10,7 +10,9 @@ struct Point {
   Point(double _x, double _y) : x(_x), y(_y) { value = 0; }
   Point() {};
 };
-bool comp(Point* a, Point* b) { return (*a).value > (*b).value; }
+// bool comp(Point* a, Point* b) { return (*a).value > (*b).value; }
+bool comp_ds(Point a, Point b) { return a.value > b.value; }
+bool comp_as(Point a, Point b) { return a.value < b.value; }
 
 /**
  * @brief 2D Line

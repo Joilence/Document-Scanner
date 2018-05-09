@@ -59,11 +59,13 @@ MatrixXd getPerspectiveTransform(vector<Point> src, vector<Point> dst) {
   for (int i = 0; i < 8; ++i) {
     B(i, 0) = b[i];
   }
-
+  cout << "A = \n";
   cout << A << endl;
+  cout << "B = \n";
   cout << B << endl;
 
   MatrixXd X = A.bdcSvd(ComputeThinU | ComputeThinV).solve(B);
+  cout << "X = \n" << X << endl;
   MatrixXd M(9, 1);
   for (int i = 0; i < 8; ++i) {
     M(i, 0) = X(i, 0);

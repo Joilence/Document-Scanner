@@ -42,9 +42,9 @@ class OptImgProc {
   CImg<double> result;
   CImg<double> A4;
 
-  std::vector<Point*> peaks;
-  std::vector<Line*> lines;
-  std::vector<Point*> intersections;
+  std::vector<Point> peaks;
+  std::vector<Line> lines;
+  std::vector<Point> intersections;
 
   OptImgProc(string path) {
     src = CImg<double>(path.c_str());
@@ -138,10 +138,10 @@ class OptImgProc {
       if (votes > THRESHOLD) {
         bool hasNeighbor = false;
         for (int i = 0; i < peaks.size(); ++i) {
-          double dis = distance(peaks[i]->x - x, peaks[i]->y - y);
+          double dis = distance(peaks[i].x - x, peaks[i].y - y);
           if (dis < NEIGHBOR_PEAK_DIS) {
             hasNeighbor = true;
-            if (peaks[i]->value < votes) peaks[i] = new Point(x, y, votes);
+            if (peaks[i].value < votes) peaks[i] = Point(x, y, votes);
             break;
           }
         }
@@ -151,19 +151,19 @@ class OptImgProc {
         if (!hasNeighbor) {
           // if peaks are not full, push back directly
           if (peaks.size() < MAX_PEAK) { //
-            peaks.push_back(new Point(x, y, votes));
+            peaks.push_back(Point(x, y, votes));
           // if peaks is full, compare with the last peak
-          } else if (peaks.back()->value < votes) {
-            peaks.back()->value = votes;
-            peaks.back()->x = x;
-            peaks.back()->y = y;
+          } else if (peaks.back().value < votes) {
+            peaks.back().value = votes;
+            peaks.back().x = x;
+            peaks.back().y = y;
           }
         }
-        std::sort(peaks.begin(), peaks.end(), comp);
+        std::sort(peaks.begin(), peaks.end(), comp_ds);
       }
     }
-    std::sort(peaks.begin(), peaks.end(), comp);
-    print_peaks();
+    std::sort(peaks.begin(), peaks.end(), comp_ds);
+    print_points(peaks);
   }
 
   bool isInImage(double cx, double cy) {
@@ -204,8 +204,8 @@ class OptImgProc {
 
     // for every peak, compute a line
     for (int i = 0; i < peaks.size(); ++i) {
-      double rho = peaks[i]->y * rhomax / hough.height(),
-             theta = peaks[i]->x * thetamax / hough.width(),
+      double rho = peaks[i].y * rhomax / hough.height(),
+             theta = peaks[i].x * thetamax / hough.width(),
              x = result.width() / 2 + rho * std::cos(theta),
              y = result.height() / 2 + rho * std::sin(theta);
       double x0 = (double)(x + 1000 * std::sin(theta)),
@@ -224,19 +224,19 @@ class OptImgProc {
       bool hasNeighbor = false;
       int parallel = 0;
       for (int i = 0; i < lines.size(); ++i) {
-        double ki = lines[i]->k;
+        double ki = lines[i].k;
         double tan = abs(ki - k) / abs(1 + ki * k);
         if (tan < 1.5) {
-          if (isNeighbor(k, b, lines[i]->k, lines[i]->b)) {
+          if (isNeighbor(k, b, lines[i].k, lines[i].b)) {
             hasNeighbor = true;
             cout << "Neighbourhood found.\n";
-            // cout << "y = " << lines[i]->k << " * x + " << lines[i]->b << endl;
-            cout << line_equation(lines[i]->k, lines[i]->b) << endl;
+            // cout << "y = " << lines[i].k << " * x + " << lines[i].b << endl;
+            cout << line_equation(lines[i].k, lines[i].b) << endl;
             break;
           } else {
             parallel += 1;
             cout << "tan = " << tan << ", parallel found " << parallel << ".\n";
-            cout << line_equation(lines[i]->k, lines[i]->b) << endl;
+            cout << line_equation(lines[i].k, lines[i].b) << endl;
           }
         }
         if (parallel >= 2) {
@@ -245,8 +245,8 @@ class OptImgProc {
       }
       cout << "---\n";
 
-      // if (!hasNeighbor && parallel < 2)
-        lines.push_back(new Line(k, b, x0, y0, x1, y1));
+      if (!hasNeighbor && parallel < 2)
+        lines.push_back(Line(k, b, x0, y0, x1, y1));
     }
     print_lines();
   }
@@ -254,20 +254,27 @@ class OptImgProc {
   void computeIntersections() {
     for (int i = 0; i < lines.size(); ++i) {
       for (int j = i + 1; j < lines.size(); ++j) {
-        double ki = lines[i]->k;
-        double bi = lines[i]->b;
-        double kj = lines[j]->k;
-        double bj = lines[j]->b;
+        double ki = lines[i].k;
+        double bi = lines[i].b;
+        double kj = lines[j].k;
+        double bj = lines[j].b;
 
         double x = (bi - bj) / (kj - ki);
         double y = (ki * x + bi);
         if (isInImage(x, y)) {
-          intersections.push_back(new Point(x, y, 0));
-          lines[i]->intersections.push_back(Point(x, y, 0));
-          lines[j]->intersections.push_back(Point(x, y, 0));
+          intersections.push_back(Point(x, y, 0));
+          lines[i].intersections.push_back(Point(x, y, 0));
+          lines[j].intersections.push_back(Point(x, y, 0));
         }
       }
     }
+
+    cout << "---\nintersections: ";
+    for (int i = 0; i < intersections.size(); ++i) {
+      cout << "[ " + std::to_string(intersections[i].x) + ", " + std::to_string(intersections[i].y) + "]";
+    }
+    cout << "\n---\n";
+
   }
 
   void computeResult(bool debug = false) {
@@ -280,7 +287,9 @@ class OptImgProc {
 
     int rad = (src.height() + src.width()) / 200;
     for (int i = 0; i < intersections.size(); ++i) {
-      result.draw_circle(intersections[i]->x, intersections[i]->y, rad, red);
+      result.draw_circle(intersections[i].x, intersections[i].y, rad, red);
+      // string point_info = "[ " + std::to_string(intersections[i].x) + ", " + std::to_string(intersections[i].y) + "]";
+      // result.draw_text(intersections[i].x, intersections[i].y, point_info.c_str(), white, black, 1, font_height);
     }
 
     // result.display();
@@ -288,8 +297,8 @@ class OptImgProc {
 
   void drawResult (bool debug = false) {
     for (int i = 0; i < lines.size(); ++i) {
-      double k = lines[i]->k;
-      double b = lines[i]->b;
+      double k = lines[i].k;
+      double b = lines[i].b;
 
       vector<Point> linePoint;
       if (debug) {
@@ -313,8 +322,8 @@ class OptImgProc {
           linePoint.push_back(Point(0, cl, 0));
         }
       } else {
-        linePoint.push_back(lines[i]->intersections[0]);
-        linePoint.push_back(lines[i]->intersections[1]);
+        linePoint.push_back(lines[i].intersections[0]);
+        linePoint.push_back(lines[i].intersections[1]);
       }
 
       double x0 = linePoint[0].x;
@@ -340,7 +349,7 @@ class OptImgProc {
       double mx = (x0 + x1) / 2;
       double my = (y0 + y1) / 2;
       // add annotation of line
-      int font_height = 60;
+      int font_height = 10;
       string line_info = line_equation(k, b);
       result.draw_text(mx, my, line_info.c_str(), white, black, 1, font_height);
     }
@@ -352,11 +361,11 @@ class OptImgProc {
     computeResult();
   }
 
-  void print_peaks() {
-    for (int i = 0; i < peaks.size(); ++i) {
+  void print_points(vector<Point> & points) {
+    for (int i = 0; i < points.size(); ++i) {
       cout << "("
-           << "【" << peaks[i]->value << "】" << peaks[i]->x << ", "
-           << peaks[i]->y << ")"
+           << "【" << points[i].value << "】" << points[i].x << ", "
+           << points[i].y << ")"
            << " ";
     }
     cout << endl;
@@ -365,12 +374,21 @@ class OptImgProc {
   void print_lines() {
     cout << "Lines:\n";
     for (int i = 0; i < lines.size(); ++i) {
-      // cout << "y = " << lines[i]->k << " * x + " << lines[i]->b << endl;
-      cout << line_equation(lines[i]->k, lines[i]->b) << endl;
+      // cout << "y = " << lines[i].k << " * x + " << lines[i].b << endl;
+      cout << line_equation(lines[i].k, lines[i].b) << endl;
     }
   }
 
   string line_equation(double k, double b) {
     return "y = " + std::to_string(k) + " * x + " + std::to_string(b);
+  }
+
+  void sort_intersections() {
+    for (int i = 0; i < 4; ++i) {
+      intersections[i].value = intersections[i].x + intersections[i].y;
+    }
+    std::sort(intersections.begin(), intersections.end(), comp_as);
+    cout << "---\nsorted intersections:\n";
+    print_points(intersections);
   }
 };
