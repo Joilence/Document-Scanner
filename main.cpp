@@ -16,7 +16,7 @@ int main(int argc, char const *argv[]) {
   vector<int> test_img;
   // test_img.push_back(0);
   // test_img.push_back(1);
-  test_img.push_back(2);
+  test_img.push_back(7);
   // test_img.push_back(3);
   // test_img.push_back(4);
   // test_img.push_back(5);
@@ -42,6 +42,14 @@ int main(int argc, char const *argv[]) {
     imgs[i].drawA4();
     save_path = "result/" + std::to_string(test_img[i]) + "-a4.jpg";
     imgs[i].A4.save(save_path.c_str());
+
+    imgs[i].ostuSeg();
+    save_path = "result/" + std::to_string(test_img[i]) + "-a4-ostu.jpg";
+    imgs[i].A4_ostuseg.save(save_path.c_str());
+
+    imgs[i].iterSeg();
+    save_path = "result/" + std::to_string(test_img[i]) + "-a4-iter.jpg";
+    imgs[i].A4_iterseg.save(save_path.c_str());
   }
 
   return 0;

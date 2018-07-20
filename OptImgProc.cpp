@@ -19,6 +19,18 @@ using std::vector;
 using namespace cimg_library;
 using cimg::PI;
 
+CImg<double> grayScale(CImg<double> & src, double kr = 0.33, double kg = 0.33, double kb = 0.33) {
+  CImg<double> gray(src.width(), src.height(), 1, 1, 0);
+  cimg_forXY(src, x, y) {
+    double R = (double)src(x, y, 0, 0);
+    double G = (double)src(x, y, 0, 1);
+    double B = (double)src(x, y, 0, 2);
+    gray(x, y, 0, 0) = (double)(kr * R + kg * G + kb * B);
+    // double gray_val = (double)(R * 299 + G * 587 + B * 114 + 500) / 1000;
+    // gray(x, y, 0, 0) = gray_val;
+  }
+  return gray;
+}
 
 /**
  * Color
@@ -42,6 +54,8 @@ class OptImgProc {
   CImg<double> result;
   CImg<double> transMatrix;
   CImg<double> A4;
+  CImg<double> A4_iterseg;
+  CImg<double> A4_ostuseg;
 
   std::vector<Point> peaks;
   std::vector<Line> lines;
@@ -490,5 +504,99 @@ class OptImgProc {
         A4(u, v, 2) = src(x, y, 2);
       }
     }
+
+    A4 = grayScale(A4);
   }
+
+  /**
+   * Image Segmentation
+   */
+  #define DELTA_TH 2
+
+  void binarizeImg(CImg<double>& img, double th) {
+    cimg_forXY(img, x, y) { img(x, y) = img(x, y) > th ? 255 : 0; }
+  }
+
+  double iterSeg() {
+    A4_iterseg = CImg<double>(A4);
+    double th = 0, th_new = 255 / 2;
+    while (abs(th - th_new) > DELTA_TH) {
+      th = th_new;
+      long bright_count = 0, dark_count = 0, bright_accu = 0, dark_accu = 0;
+      cimg_forXY(A4_iterseg, x, y) {
+        if (A4_iterseg(x, y) < th) {
+          dark_count++;
+          dark_accu += A4_iterseg(x, y);
+        } else {
+          bright_count++;
+          bright_accu += A4_iterseg(x, y);
+        }
+      }
+      int m1 = bright_accu / bright_count;
+      int m2 = dark_accu / dark_count;
+      th_new = (m1 + m2) / 2;
+    }
+
+    binarizeImg(A4_iterseg, th_new);
+
+    std::cout << "iter final th = " << th_new << std::endl;
+
+    return th_new;
+  }
+
+  /**
+   * Based on:
+   * Juan Pablo Balarini,
+   * A C++ Implementation of Otsu's Image Segmentation Method,
+   * 2016-04-15, IPOL
+   */
+  int ostuSeg() {
+    A4_ostuseg = CImg<double>(A4);
+    long size = A4_ostuseg.size();
+    int hist[256] = {0}, th = 0;
+    double var_max = 0;
+    long accu = 0, accuB = 0, q1 = 0, q2 = 0, mu1 = 0, mu2 = 0;
+
+    cimg_forXY(A4_ostuseg, x, y) {
+      hist[(int)A4_ostuseg(x, y)] += 1;
+      // accu += img(x, y);
+    }
+
+    // std::cout << "hist initialized\n";
+
+    // for (int i = 0; i <= 255; ++i) {
+    // std::cout << i << ": " << hist[i] << std::endl;
+    // }
+
+    for (int i = 0; i <= 255; ++i) {
+      accu += i * hist[i];
+    }
+
+    for (int i = 0; i <= 255; ++i) {
+      q1 += hist[i];
+      if (q1 == 0) continue;
+      q2 = size - q1;
+
+      if (q2 == 0) break;
+
+      accuB += i * hist[i];
+
+      mu1 = accuB / q1;
+      mu2 = (accu - accuB) / q2;
+
+      double var = q1 * q2 * (mu1 - mu2) * (mu1 - mu2);
+      if (var > var_max) {
+        th = i;
+        // std::cout << "new th = " << th << std::endl;
+        var_max = var;
+      }
+    }
+
+    std::cout << "ostu final th = " << th << std::endl;
+
+    binarizeImg(A4_ostuseg, th);
+
+    return th;
+  }
+
 };
