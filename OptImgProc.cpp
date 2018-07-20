@@ -395,9 +395,10 @@ class OptImgProc {
     x = intersections[0].x - intersections[1].x;
     y = intersections[0].y - intersections[1].y;
     int widthA4 = (int)sqrt(x * x + y * y);
-    x = intersections[1].x - intersections[2].x;
-    y = intersections[1].y - intersections[2].y;
-    int heightA4 = (int)sqrt(x * x + y * y);
+    // x = intersections[1].x - intersections[2].x;
+    // y = intersections[1].y - intersections[2].y;
+    // int heightA4 = (int)sqrt(x * x + y * y);
+    int heightA4 = widthA4 / 210 * 297;
 
     vector<Point> dest_point;
     dest_point.push_back(Point(0, 0)); // top right
@@ -461,11 +462,12 @@ class OptImgProc {
     x = intersections[0].x - intersections[1].x;
     y = intersections[0].y - intersections[1].y;
     int widthA4 = (int)sqrt(x * x + y * y);
-    x = intersections[1].x - intersections[2].x;
-    y = intersections[1].y - intersections[2].y;
-    int heightA4 = (int)sqrt(x * x + y * y);
+    // x = intersections[1].x - intersections[2].x;
+    // y = intersections[1].y - intersections[2].y;
+    // int heightA4 = (int)sqrt(x * x + y * y);
+    int heightA4 = widthA4 / 210 * 297;
     cout << "---\n widthA4, heightA4 = " << std::to_string(widthA4) << ", "
-         << std::to_string(heightA4) << "\n---\n";
+         << std::to_string(heightA4) << "\n---\n"; 
     A4.assign(widthA4, heightA4, 1, 3);
 
     double a = transMatrix(0, 0), b = transMatrix(0, 1), c = transMatrix(0, 2),
