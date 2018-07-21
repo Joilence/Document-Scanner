@@ -6,8 +6,8 @@
 #include "datatype.cpp"
 
 #define GRADLIMIT 20
-#define THRESHOLD 550         // baseline of peaks value
-#define NEIGHBOR_PEAK_DIS 20  // decide whether two peaks are neighbor
+#define THRESHOLD 550          // baseline of peaks value
+#define NEIGHBOR_PEAK_DIS 20   // decide whether two peaks are neighbor
 #define NEIGHBOR_LINE_DIS 0.3  // decide whether two lines are neighbor
 #define MAX_PEAK 8
 #define MIN_DOUBLE 0.0000001  // make every denominator be non-zero
@@ -19,7 +19,8 @@ using std::vector;
 using namespace cimg_library;
 using cimg::PI;
 
-CImg<double> grayScale(CImg<double> & src, double kr = 0.33, double kg = 0.33, double kb = 0.33) {
+CImg<double> grayScale(CImg<double>& src, double kr = 0.33, double kg = 0.33,
+                       double kb = 0.33) {
   CImg<double> gray(src.width(), src.height(), 1, 1, 0);
   cimg_forXY(src, x, y) {
     double R = (double)src(x, y, 0, 0);
@@ -35,7 +36,8 @@ CImg<double> grayScale(CImg<double> & src, double kr = 0.33, double kg = 0.33, d
 /**
  * Color
  */
-const unsigned char white[3] = {255, 255, 255}, black[3] = {0, 0, 0}, red[] = {220, 20, 60};
+const unsigned char white[3] = {255, 255, 255}, black[3] = {0, 0, 0},
+                    red[] = {220, 20, 60};
 
 /**
  * @brief Calculate Euclidean distance
@@ -44,7 +46,7 @@ double distance(double x, double y) { return sqrt(x * x + y * y); }
 
 /**
  * @brief Image Processor
- * @details 
+ * @details
  */
 class OptImgProc {
  public:
@@ -76,14 +78,13 @@ class OptImgProc {
 
     CImgList<> grad = src.blur(3).normalize(0, 255).get_gradient();
     cimg_forXY(src, s, t) {
-      double
-        Gs = grad[0](s, t),                   //
-        Gt = grad[1](s, t),                   //  The actual pixel is (s,t)
-        Gst = cimg::abs(Gs) + cimg::abs(Gt),  //
-        // For efficient computation we observe that 
-        // |Gs|+ |Gt| ~=~ sqrt(Gs^2 + Gt^2)
-        Gr, Gur, Gu, Gul, Gl, Gdl, Gd, Gdr;
-        // right, up right, up, up left, left, down left, down, down right.
+      double Gs = grad[0](s, t),                //
+          Gt = grad[1](s, t),                   //  The actual pixel is (s,t)
+          Gst = cimg::abs(Gs) + cimg::abs(Gt),  //
+          // For efficient computation we observe that
+          // |Gs|+ |Gt| ~=~ sqrt(Gs^2 + Gt^2)
+          Gr, Gur, Gu, Gul, Gl, Gdl, Gd, Gdr;
+      // right, up right, up, up left, left, down left, down, down right.
       if (Gst >= thresH) {
         edged.draw_point(s, t, black);
       } else if (thresL <= Gst && Gst < thresH) {
@@ -147,7 +148,7 @@ class OptImgProc {
     return hough;
   }
 
-    void findPeaks() {
+  void findPeaks() {
     cimg_forXY(hough, x, y) {
       double votes = hough(x, y);
       if (votes > THRESHOLD) {
@@ -165,9 +166,9 @@ class OptImgProc {
         // if not, continue
         if (!hasNeighbor) {
           // if peaks are not full, push back directly
-          if (peaks.size() < MAX_PEAK) { //
+          if (peaks.size() < MAX_PEAK) {  //
             peaks.push_back(Point(x, y, votes));
-          // if peaks is full, compare with the last peak
+            // if peaks is full, compare with the last peak
           } else if (peaks.back().value < votes) {
             peaks.back().value = votes;
             peaks.back().x = x;
@@ -187,14 +188,11 @@ class OptImgProc {
 
   bool isNeighbor(double k, double b, double ki, double bi) {
     // u = up, d = down, r = right, l = left
-    double cu = ((double)(0 - b) / k), 
-           cd = ((double)(src.height() - b) / k),
-           cr = ((double)(k * src.width() + b)),
-           cl = b;
+    double cu = ((double)(0 - b) / k), cd = ((double)(src.height() - b) / k),
+           cr = ((double)(k * src.width() + b)), cl = b;
     double cui = ((double)(0 - bi) / ki),
            cdi = ((double)(src.height() - bi) / ki),
-           cri = ((double)(ki * src.width() + bi)), 
-           cli = bi;
+           cri = ((double)(ki * src.width() + bi)), cli = bi;
 
     if (isInImage(cu, 0) && isInImage(cui, 0) &&
         abs(cui - cu) < NEIGHBOR_LINE_DIS * src.width())
@@ -213,10 +211,10 @@ class OptImgProc {
 
   void findLines() {
     double rhomax = std::sqrt((double)(src.width() * src.width() +
-                                        src.height() * src.height())) /
-                              2,
+                                       src.height() * src.height())) /
+                    2,
            thetamax = 2 * cimg::PI;
-
+    bool debug = false;
     // for every peak, compute a line
     for (int i = 0; i < peaks.size(); ++i) {
       double rho = peaks[i].y * rhomax / hough.height(),
@@ -233,9 +231,11 @@ class OptImgProc {
       double b = (double)(y0 - k * x0);
 
       // sieve of lines
-      cout << "---\n";
-      cout << "Judging ... \n";
-      cout << line_equation(k, b) << endl;
+      if (debug) {
+        cout << "---\n";
+        cout << "Judging ... \n";
+        cout << line_equation(k, b) << endl;
+      }
       bool hasNeighbor = false;
       int parallel = 0;
       for (int i = 0; i < lines.size(); ++i) {
@@ -244,21 +244,25 @@ class OptImgProc {
         if (tan < 1.5) {
           if (isNeighbor(k, b, lines[i].k, lines[i].b)) {
             hasNeighbor = true;
-            cout << "Neighbourhood found.\n";
-            // cout << "y = " << lines[i].k << " * x + " << lines[i].b << endl;
-            cout << line_equation(lines[i].k, lines[i].b) << endl;
+            if (debug) {
+              cout << "Neighbourhood found.\n";
+              // cout << "y = " << lines[i].k << " * x + " << lines[i].b << endl;
+              cout << line_equation(lines[i].k, lines[i].b) << endl;
+            }
             break;
           } else {
             parallel += 1;
-            cout << "tan = " << tan << ", parallel found " << parallel << ".\n";
-            cout << line_equation(lines[i].k, lines[i].b) << endl;
+            if (debug) {
+              cout << "tan = " << tan << ", parallel found " << parallel << ".\n";
+              cout << line_equation(lines[i].k, lines[i].b) << endl;
+            }
           }
         }
         if (parallel >= 2) {
           break;
         }
       }
-      cout << "---\n";
+      if (debug) cout << "---\n";
 
       if (!hasNeighbor && parallel < 2)
         lines.push_back(Line(k, b, x0, y0, x1, y1));
@@ -286,10 +290,10 @@ class OptImgProc {
 
     cout << "---\nintersections: ";
     for (int i = 0; i < intersections.size(); ++i) {
-      cout << "[ " + std::to_string(intersections[i].x) + ", " + std::to_string(intersections[i].y) + "]";
+      cout << "[ " + std::to_string(intersections[i].x) + ", " +
+                  std::to_string(intersections[i].y) + "]";
     }
     cout << "\n---\n";
-
   }
 
   void computeResult(bool debug = false) {
@@ -303,14 +307,16 @@ class OptImgProc {
     int rad = (src.height() + src.width()) / 200;
     for (int i = 0; i < intersections.size(); ++i) {
       result.draw_circle(intersections[i].x, intersections[i].y, rad, red);
-      // string point_info = "[ " + std::to_string(intersections[i].x) + ", " + std::to_string(intersections[i].y) + "]";
-      // result.draw_text(intersections[i].x, intersections[i].y, point_info.c_str(), white, black, 1, font_height);
+      // string point_info = "[ " + std::to_string(intersections[i].x) + ", " +
+      // std::to_string(intersections[i].y) + "]";
+      // result.draw_text(intersections[i].x, intersections[i].y,
+      // point_info.c_str(), white, black, 1, font_height);
     }
 
     // result.display();
   }
 
-  void drawResult (bool debug = false) {
+  void drawResult(bool debug = false) {
     for (int i = 0; i < lines.size(); ++i) {
       double k = lines[i].k;
       double b = lines[i].b;
@@ -355,9 +361,9 @@ class OptImgProc {
       int width = 7;
       for (int i = 1; i <= width; ++i) {
         result.draw_line(x0 + i, y0, x1 + i, y1, white, 1.0f, 0xF0F0F0F0)
-          .draw_line(x0 + i, y0, x1 + i, y1, black, 1.0f, 0x0F0F0F0F)
-          .draw_line(x0, y0 + i, x1, y1 + i, white, 1.0f, 0xF0F0F0F0)
-          .draw_line(x0, y0 + i, x1, y1 + i, black, 1.0f, 0x0F0F0F0F);
+            .draw_line(x0 + i, y0, x1 + i, y1, black, 1.0f, 0x0F0F0F0F)
+            .draw_line(x0, y0 + i, x1, y1 + i, white, 1.0f, 0xF0F0F0F0)
+            .draw_line(x0, y0 + i, x1, y1 + i, black, 1.0f, 0x0F0F0F0F);
       }
 
       // compute mid-point
@@ -370,7 +376,7 @@ class OptImgProc {
     }
   }
 
-  void print_points(vector<Point> & points) {
+  void print_points(vector<Point>& points) {
     for (int i = 0; i < points.size(); ++i) {
       cout << "("
            << "【" << points[i].value << "】" << points[i].x << ", "
@@ -415,59 +421,60 @@ class OptImgProc {
     int heightA4 = widthA4 / 210 * 297;
 
     vector<Point> dest_point;
-    dest_point.push_back(Point(0, 0)); // top right
-    dest_point.push_back(Point(widthA4, 0)); // top left
-    dest_point.push_back(Point(0, heightA4)); // bottom right
-    dest_point.push_back(Point(widthA4, heightA4)); // bottom left
-
+    dest_point.push_back(Point(0, 0));               // top right
+    dest_point.push_back(Point(widthA4, 0));         // top left
+    dest_point.push_back(Point(0, heightA4));        // bottom right
+    dest_point.push_back(Point(widthA4, heightA4));  // bottom left
 
     for (int i = 0; i < 4; i++) {
-        int j = i * 2;
-        A(0, j) = dest_point[i].x;
-        A(1, j) = dest_point[i].y;
-        A(2, j) = 1;
-        A(3, j) = 0;
-        A(4, j) = 0;
-        A(5, j) = 0;
-        A(6, j) = -intersections[i].x * dest_point[i].x;
-        A(7, j) = -intersections[i].x * dest_point[i].y;
+      int j = i * 2;
+      A(0, j) = dest_point[i].x;
+      A(1, j) = dest_point[i].y;
+      A(2, j) = 1;
+      A(3, j) = 0;
+      A(4, j) = 0;
+      A(5, j) = 0;
+      A(6, j) = -intersections[i].x * dest_point[i].x;
+      A(7, j) = -intersections[i].x * dest_point[i].y;
 
-        int k = j + 1;
-        A(0, k) = 0;
-        A(1, k) = 0;
-        A(2, k) = 0;
-        A(3, k) = dest_point[i].x;
-        A(4, k) = dest_point[i].y;
-        A(5, k) = 1;
-        A(6, k) = -intersections[i].y * dest_point[i].x;
-        A(7, k) = -intersections[i].y * dest_point[i].y;
+      int k = j + 1;
+      A(0, k) = 0;
+      A(1, k) = 0;
+      A(2, k) = 0;
+      A(3, k) = dest_point[i].x;
+      A(4, k) = dest_point[i].y;
+      A(5, k) = 1;
+      A(6, k) = -intersections[i].y * dest_point[i].x;
+      A(7, k) = -intersections[i].y * dest_point[i].y;
 
-        B(0, j) = intersections[i].x;
-        B(0, j + 1) = intersections[i].y;
+      B(0, j) = intersections[i].x;
+      B(0, j + 1) = intersections[i].y;
     }
 
     transMatrix = B.get_solve(A);
 
-    cout << "---\nMatrix A = \n";
-    for (int i = 0; i < A._height; i++) {
+    if (false) {
+      cout << "---\nMatrix A = \n";
+      for (int i = 0; i < A._height; i++) {
         for (int j = 0; j < A._width; j++) {
-            cout << A(j, i) << " ";
+          cout << A(j, i) << " ";
         }
         cout << endl;
-    }
-    cout << "---\nMatrix B = \n";
-    for (int i = 0; i < B._height; i++) {
+      }
+      cout << "---\nMatrix B = \n";
+      for (int i = 0; i < B._height; i++) {
         for (int j = 0; j < B._width; j++) {
-            cout << B(j, i) << " ";
+          cout << B(j, i) << " ";
         }
         cout << endl;
-    }
-    cout << "---\nTransMatrix = \n";
-    for (int i = 0; i < transMatrix._height; i++) {
+      }
+      cout << "---\nTransMatrix = \n";
+      for (int i = 0; i < transMatrix._height; i++) {
         for (int j = 0; j < transMatrix._width; j++) {
-            cout << transMatrix(j, i) << " ";
+          cout << transMatrix(j, i) << " ";
         }
         cout << endl;
+      }
     }
   }
 
@@ -481,12 +488,12 @@ class OptImgProc {
     // int heightA4 = (int)sqrt(x * x + y * y);
     int heightA4 = widthA4 / 210 * 297;
     cout << "---\n widthA4, heightA4 = " << std::to_string(widthA4) << ", "
-         << std::to_string(heightA4) << "\n---\n"; 
+         << std::to_string(heightA4) << "\n---\n";
     A4.assign(widthA4, heightA4, 1, 3);
 
     double a = transMatrix(0, 0), b = transMatrix(0, 1), c = transMatrix(0, 2),
-          d = transMatrix(0, 3), e = transMatrix(0, 4), f = transMatrix(0, 5),
-          g = transMatrix(0, 6), h = transMatrix(0, 7);
+           d = transMatrix(0, 3), e = transMatrix(0, 4), f = transMatrix(0, 5),
+           g = transMatrix(0, 6), h = transMatrix(0, 7);
     for (int u = 0; u < widthA4; u++) {
       for (int v = 0; v < heightA4; v++) {
         int x = floor((a * u + b * v + c) / (g * u + h * v + 1));
@@ -508,10 +515,10 @@ class OptImgProc {
     A4 = grayScale(A4);
   }
 
-  /**
-   * Image Segmentation
-   */
-  #define DELTA_TH 2
+/**
+ * Image Segmentation
+ */
+#define DELTA_TH 2
 
   void binarizeImg(CImg<double>& img, double th) {
     cimg_forXY(img, x, y) { img(x, y) = img(x, y) > th ? 255 : 0; }
