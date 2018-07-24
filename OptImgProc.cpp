@@ -403,6 +403,7 @@ class OptImgProc {
       intersections[i].value = intersections[i].x + intersections[i].y;
     }
     std::sort(intersections.begin(), intersections.end(), comp_as);
+
     cout << "---\nsorted intersections:\n";
     print_points(intersections);
   }

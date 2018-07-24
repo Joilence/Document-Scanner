@@ -16,7 +16,7 @@ int main(int argc, char const *argv[]) {
 
   struct dirent *ptr;
   DIR *dir;
-  string PATH = "./Dataset/";
+  string PATH = "./image/";
   dir = opendir(PATH.c_str());
   vector<string> test_img;
   while ((ptr = readdir(dir)) != NULL) {
@@ -43,7 +43,7 @@ int main(int argc, char const *argv[]) {
     cout << "####################\n";
     cout << "##### now on " << test_img[i] << " #####" << endl;
     cout << "####################\n";
-    imgs.push_back(OptImgProc("Dataset/" + test_img[i] + ".jpg"));
+    imgs.push_back(OptImgProc("image/" + test_img[i] + ".jpg"));
     // imgs[i].computeEdged();
     imgs[i].computeHough();
     imgs[i].computeResult();
@@ -62,11 +62,11 @@ int main(int argc, char const *argv[]) {
     // imgs[i].A4.save(save_path.c_str());
 
     imgs[i].ostuSeg();
-    save_path = "result/" + test_img[i] + "-ostu.jpg";
-    imgs[i].A4_ostuseg.save(save_path.c_str());
+    // save_path = "seg/" + test_img[i] + "-ostu.jpg";
+    // imgs[i].A4_ostuseg.save(save_path.c_str());
 
     imgs[i].iterSeg();
-    save_path = "result/" + test_img[i] + "-iter.jpg";
+    save_path = "seg/" + test_img[i] + ".jpg";
     imgs[i].A4_iterseg.save(save_path.c_str());
   }
 

@@ -34,3 +34,5 @@
 .DS_Store
 result
 result/*
+/submit
+/mnist
