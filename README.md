@@ -14,6 +14,8 @@ Notice that CImg is used in C++ part, and `Makefile` compile the C++ program in 
 
 ## Run
 
+A digits recognition model trained by SVM on MNIST has been provided in the directory `./model`.
+
 Runing C++ segmentation program:
 
 ``` shell
